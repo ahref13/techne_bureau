@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Techné Bureau — Coming Soon</title>
+  <meta name="description" content="Techné Bureau — Launching soon." />
+  <style>
+    html,body{
+      height:100%;
+      margin:0;
+      background:#05070a;
+      overflow:hidden;
+    }
+    canvas{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+  </style>
+</head>
+
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+
+<script>
+  /**
+   @author ertdfgcvb
+   @title  Time: milliseconds
+   @desc   Use of context.time
+   */
+
+    // Your pattern
+  const pattern = 'ABCxyz01═|+:. ';
+
+  // Fixed center text (does not change)
+  const TITLE = 'Techné Bureau';
+  const SUB   = 'Coming Soon';
+
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let fontSize = 16;  // tweak
+  let cellW = 10, cellH = 18;
+  let cols = 0, rows = 0;
+
+  function resize(){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.textBaseline = 'top';
+    ctx.font = `100 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+
+    cellW = Math.ceil(ctx.measureText('M').width);
+    cellH = Math.ceil(fontSize * 1.22);
+
+    cols = Math.ceil(innerWidth / cellW);
+    rows = Math.ceil(innerHeight / cellH);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Your main loop logic
+  function main(coord, context) {
+    const t = context.time * 0.0001;
+    const x = coord.x;
+    const y = coord.y;
+    const o = Math.sin(y * Math.sin(t) * 0.2 + x * 0.04 + t) * 20;
+    const i = Math.round(Math.abs(x + y + o)) % pattern.length;
+    return { char: pattern[i], fontWeight: '100' };
+  }
+
+  // Helpers: map pixel center -> grid coordinates
+  function pxToGridX(px){ return Math.floor(px / cellW); }
+  function pxToGridY(py){ return Math.floor(py / cellH); }
+
+  function render(now){
+    const context = { time: now };
+
+    // Background
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    ctx.fillStyle = '#05070a';
+    ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+    // Set “scene” text style
+    ctx.font = `100 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+    ctx.fillStyle = 'rgba(233,238,246,.72)';
+
+    // Build a centered "protected" region (in grid units) where we draw fixed text.
+    const cx = Math.floor(cols / 2);
+    const cy = Math.floor(rows / 2);
+
+    // Compute the box size around the two lines
+    const titleLen = TITLE.length;
+    const subLen   = SUB.length;
+    const boxW = Math.max(titleLen, subLen) + 8; // padding in characters
+    const boxH = 4; // top/bottom padding + 2 lines
+
+    const boxLeft = cx - Math.floor(boxW / 2);
+    const boxTop  = cy - Math.floor(boxH / 2);
+
+    const boxRight = boxLeft + boxW - 1;
+    const boxBottom = boxTop + boxH - 1;
+
+    // Draw the animated field, but “mask” the box area so it stays clean
+    for (let gy = 0; gy < rows; gy++) {
+      for (let gx = 0; gx < cols; gx++) {
+
+        // Skip inside the center box (so text is readable)
+        if (gx >= boxLeft && gx <= boxRight && gy >= boxTop && gy <= boxBottom) {
+          continue;
+        }
+
+        const res = main({ x: gx, y: gy, index: gy * cols + gx }, context);
+        ctx.fillText(res.char, gx * cellW, gy * cellH);
+      }
+    }
+
+    // Optional: draw a subtle ASCII frame using pattern characters (still “part of script”)
+    // You can remove this block if you want no frame at all.
+
+    // Draw fixed center text (does not change)
+    ctx.fillStyle = 'rgba(233,238,246,.92)';
+
+    // Title line
+    const titleX = cx - Math.floor(titleLen / 2);
+    const titleY = boxTop + 1;
+    for (let i = 0; i < titleLen; i++) {
+      ctx.fillText(TITLE[i], (titleX + i) * cellW, titleY * cellH);
+    }
+
+    // Subtitle line
+    const subX = cx - Math.floor(subLen / 2);
+    const subY = titleY + 1;
+    for (let i = 0; i < subLen; i++) {
+      ctx.fillText(SUB[i], (subX + i) * cellW, subY * cellH);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+</script>
+</body>
+</html>
