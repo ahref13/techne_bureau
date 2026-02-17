@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Techné Bureau — Coming Soon</title>
-  <meta name="description" content="Techné Bureau — Launching soon." />
+  <title>Techné Bureau — Creative Technology & Brand Studio</title>
+  <meta name="description" content="Techné Bureau — Creative technology and brand studio. Working with artists, galleries, and creative agencies. Currently by referral." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;400&display=swap" rel="stylesheet">
   <style>
     html,body{
       height:100%;
@@ -27,20 +30,29 @@
    */
 
     // Your pattern
-  const pattern = 'ABCxyz01═|+:. ';
+  const pattern = 'abcdefghxyz·:;=~-+÷øæ. ';
 
   // Fixed center text (does not change)
-  const TITLE = 'Techné Bureau';
-  const SUB   = 'Coming Soon';
+  const LINES = [
+    'Techné Bureau',
+    '',
+    'Creative technology and brand studio.',
+    'Working with artists, galleries,',
+    'and creative agencies.',
+    '',
+    'Currently by referral.',
+  ];
 
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
 
-  let fontSize = 16;  // tweak
+  let fontSize = 14;
   let cellW = 10, cellH = 18;
   let cols = 0, rows = 0;
 
   function resize(){
+    fontSize = innerWidth < 600 ? 12 : 14;
+
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.floor(innerWidth * dpr);
     canvas.height = Math.floor(innerHeight * dpr);
@@ -49,7 +61,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.textBaseline = 'top';
-    ctx.font = `100 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+    ctx.font = `100 ${fontSize}px "IBM Plex Mono", monospace`;
 
     cellW = Math.ceil(ctx.measureText('M').width);
     cellH = Math.ceil(fontSize * 1.22);
@@ -83,21 +95,20 @@
     ctx.fillRect(0, 0, innerWidth, innerHeight);
 
     // Set “scene” text style
-    ctx.font = `100 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+    ctx.font = `100 ${fontSize}px "IBM Plex Mono", monospace`;
     ctx.fillStyle = 'rgba(233,238,246,.72)';
 
-    // Build a centered "protected" region (in grid units) where we draw fixed text.
-    const cx = Math.floor(cols / 2);
-    const cy = Math.floor(rows / 2);
+    // Build a "protected" region (in grid units) anchored bottom-left with 24px margin
+    const marginCols = Math.ceil(24 / cellW);
+    const marginRows = Math.ceil(24 / cellH);
 
-    // Compute the box size around the two lines
-    const titleLen = TITLE.length;
-    const subLen   = SUB.length;
-    const boxW = Math.max(titleLen, subLen) + 8; // padding in characters
-    const boxH = 4; // top/bottom padding + 2 lines
+    // Compute the box size around all lines
+    const maxLen = Math.max(...LINES.map(l => l.length));
+    const boxW = maxLen + 8; // padding in characters
+    const boxH = LINES.length + 2; // top/bottom padding + lines
 
-    const boxLeft = cx - Math.floor(boxW / 2);
-    const boxTop  = cy - Math.floor(boxH / 2);
+    const boxLeft = marginCols;
+    const boxTop  = rows - boxH - marginRows;
 
     const boxRight = boxLeft + boxW - 1;
     const boxBottom = boxTop + boxH - 1;
@@ -122,18 +133,13 @@
     // Draw fixed center text (does not change)
     ctx.fillStyle = 'rgba(233,238,246,.92)';
 
-    // Title line
-    const titleX = cx - Math.floor(titleLen / 2);
-    const titleY = boxTop + 1;
-    for (let i = 0; i < titleLen; i++) {
-      ctx.fillText(TITLE[i], (titleX + i) * cellW, titleY * cellH);
-    }
-
-    // Subtitle line
-    const subX = cx - Math.floor(subLen / 2);
-    const subY = titleY + 1;
-    for (let i = 0; i < subLen; i++) {
-      ctx.fillText(SUB[i], (subX + i) * cellW, subY * cellH);
+    for (let ln = 0; ln < LINES.length; ln++) {
+      const line = LINES[ln];
+      const lx = boxLeft + 4; // left-aligned with padding
+      const ly = boxTop + 1 + ln;
+      for (let i = 0; i < line.length; i++) {
+        ctx.fillText(line[i], (lx + i) * cellW, ly * cellH);
+      }
     }
 
     requestAnimationFrame(render);
